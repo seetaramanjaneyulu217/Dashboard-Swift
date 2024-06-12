@@ -4,10 +4,13 @@ import InputBox from "../components/InputBox";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { UserDetails } from "../types";
+import { sendUserDetailsToStore } from "../store/slices/userSlice";
+import { useDispatch } from "react-redux";
 
 const Profile = () => {
 
     const [user, setUser] = useState<UserDetails>({})
+    const dispatch = useDispatch()
     const navigate = useNavigate()
 
     useEffect(() => {
@@ -21,7 +24,9 @@ const Profile = () => {
             })
             .then(response => response.json())
             .then(result => {
+                console.log(result)
                 setUser(result[0])
+                dispatch(sendUserDetailsToStore({ user: result[0] }))
             })
             .catch(err => {
                 toast.error('Error fetching users')
@@ -32,7 +37,7 @@ const Profile = () => {
     }, [])
 
   return (
-    <div className="flex flex-col w-[80%] mx-auto my-24">
+    <div className="flex flex-col w-[80%] mx-auto my-16">
       {/* for taking back to dashboard */}
       <div className="flex items-center gap-x-2 mb-7">
         <GoArrowLeft size={20} color="#4a5b77" className="cursor-pointer" onClick={() => navigate('/')} />
