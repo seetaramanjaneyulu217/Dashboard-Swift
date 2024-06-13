@@ -7,7 +7,6 @@ import SortItem from "../components/SortItem";
 import { IoSearchOutline } from "react-icons/io5";
 import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
 import { MdOutlineKeyboardArrowRight } from "react-icons/md";
-import { count } from "console";
 
 const Dashboard = () => {
   const [currentPage, setCurrentPage] = useState<number>(
@@ -34,45 +33,39 @@ const Dashboard = () => {
   const [searchedComments, setSearchedComments] = useState<CommentsDetails[]>(
     []
   );
-  console.log(searchedComments);
+  const [sortedComments, setSortedComments] = useState<CommentsDetails[]>([]);
   const columns = TableColumns();
 
   const filterComments = () => {
 
-    setSlicedComments(
-      comments.slice(
-        itemsPerPage * (currentPage - 1),
-        currentPage * itemsPerPage
-      )
+    let searchedComments: CommentsDetails[] = slicedComments.filter(
+      (comment: CommentsDetails) => {
+        if (
+          comment.name
+            ?.replace(/ /g, "")
+            .toLowerCase()
+            ?.includes(searchText.replace(/ /g, "").toLowerCase()) ||
+          comment.email
+            ?.replace(/ /g, "")
+            .toLowerCase()
+            ?.includes(searchText.replace(/ /g, "").toLowerCase()) ||
+          comment.body
+            ?.replace(/ /g, "")
+            .toLowerCase()
+            ?.includes(searchText.replace(/ /g, "").toLowerCase())
+        ) {
+          return comment;
+        }
+      }
     );
 
-    let searchedComments: CommentsDetails[] = slicedComments.filter((comment: CommentsDetails) => {
-      if (
-        comment.name
-          ?.replace(/ /g, "")
-          .toLowerCase()
-          ?.includes(searchText.replace(/ /g, "").toLowerCase()) ||
-        comment.email
-          ?.replace(/ /g, "")
-          .toLowerCase()
-          ?.includes(searchText.replace(/ /g, "").toLowerCase()) ||
-        comment.body
-          ?.replace(/ /g, "")
-          .toLowerCase()
-          ?.includes(searchText.replace(/ /g, "").toLowerCase())
-      ) {
-        return comment;
-      }
-    });
-
-    return searchedComments;
+    setSearchedComments(searchedComments);
   };
 
   const handleSearchText = (searchText: string): void => {
+
     setSearchText(searchText);
     localStorage.setItem("searchText", searchText);
-
-    console.log(searchText)
 
     if (searchText === "") {
       setSlicedComments(
@@ -85,8 +78,7 @@ const Dashboard = () => {
       return;
     }
 
-    const searchedComments = filterComments();
-    setSearchedComments(searchedComments);
+    filterComments();
   };
 
   const sortItems = (sortType: string) => {
@@ -106,13 +98,14 @@ const Dashboard = () => {
                 currentPage * itemsPerPage
               )
             );
+            setSortedComments([]);
           } else {
             filterComments();
           }
           break;
         case 1:
           if (searchedComments.length === 0) {
-            setSlicedComments(
+            setSortedComments(
               slicedComments.sort(
                 (comment1: CommentsDetails, comment2: CommentsDetails) => {
                   return sortFn(sortType, true, comment1, comment2);
@@ -120,7 +113,7 @@ const Dashboard = () => {
               )
             );
           } else {
-            setSearchedComments(
+            setSortedComments(
               searchedComments.sort(
                 (comment1: CommentsDetails, comment2: CommentsDetails) => {
                   return sortFn(sortType, true, comment1, comment2);
@@ -132,7 +125,7 @@ const Dashboard = () => {
 
         case 2:
           if (searchedComments.length === 0) {
-            setSlicedComments(
+            setSortedComments(
               slicedComments.sort(
                 (comment1: CommentsDetails, comment2: CommentsDetails) => {
                   return sortFn(sortType, false, comment1, comment2);
@@ -140,7 +133,7 @@ const Dashboard = () => {
               )
             );
           } else {
-            setSearchedComments(
+            setSortedComments(
               searchedComments.sort(
                 (comment1: CommentsDetails, comment2: CommentsDetails) => {
                   return sortFn(sortType, false, comment1, comment2);
@@ -148,6 +141,7 @@ const Dashboard = () => {
               )
             );
           }
+          break;
       }
 
       if (sortFields.count === 3) {
@@ -157,7 +151,7 @@ const Dashboard = () => {
       setSortFields({ count: 2, type: sortType });
 
       if (searchedComments.length === 0) {
-        setSlicedComments(
+        setSortedComments(
           slicedComments.sort(
             (comment1: CommentsDetails, comment2: CommentsDetails) => {
               return sortFn(sortType, true, comment1, comment2);
@@ -165,7 +159,7 @@ const Dashboard = () => {
           )
         );
       } else {
-        setSearchedComments(
+        setSortedComments(
           searchedComments.sort(
             (comment1: CommentsDetails, comment2: CommentsDetails) => {
               return sortFn(sortType, true, comment1, comment2);
@@ -174,8 +168,6 @@ const Dashboard = () => {
         );
       }
     }
-
-    localStorage.setItem("sortFields", JSON.stringify(sortFields));
   };
 
   const sortFn = (
@@ -193,6 +185,48 @@ const Dashboard = () => {
       comparision = (comment1.email ?? "").localeCompare(comment2.email ?? "");
     }
     return ascending ? comparision : -comparision;
+  };
+
+  const makeDefaultSort = (sortFields: SortType) => {
+    if (sortFields.count === 1) {
+      return;
+    } else if (sortFields.count === 2) {
+      if (searchedComments.length === 0) {
+        setSortedComments(
+          slicedComments.sort(
+            (comment1: CommentsDetails, comment2: CommentsDetails) => {
+              return sortFn(sortFields.type, true, comment1, comment2);
+            }
+          )
+        );
+      } else {
+        setSortedComments(
+          searchedComments.sort(
+            (comment1: CommentsDetails, comment2: CommentsDetails) => {
+              return sortFn(sortFields.type, true, comment1, comment2);
+            }
+          )
+        );
+      }
+    } else if (sortFields.count === 3) {
+      if (searchedComments.length === 0) {
+        setSortedComments(
+          slicedComments.sort(
+            (comment1: CommentsDetails, comment2: CommentsDetails) => {
+              return sortFn(sortFields.type, false, comment1, comment2);
+            }
+          )
+        );
+      } else {
+        setSortedComments(
+          searchedComments.sort(
+            (comment1: CommentsDetails, comment2: CommentsDetails) => {
+              return sortFn(sortFields.type, false, comment1, comment2);
+            }
+          )
+        );
+      }
+    }
   };
 
   useEffect(() => {
@@ -214,6 +248,7 @@ const Dashboard = () => {
     };
 
     fetchComments();
+    localStorage.setItem("sortFields", JSON.stringify(sortFields));
   }, []);
 
   useEffect(() => {
@@ -233,11 +268,16 @@ const Dashboard = () => {
     );
 
     handleSearchText(searchText);
-    // sortItems(sortFields.type)
+    makeDefaultSort(sortFields);
 
     localStorage.setItem("currentPage", currentPage.toString());
     localStorage.setItem("itemsPerPage", itemsPerPage.toString());
   }, [comments, itemsPerPage, currentPage, searchText]);
+
+  useEffect(() => {
+    localStorage.setItem("sortFields", JSON.stringify(sortFields));
+  }, [sortFields]);
+  
 
   return (
     <div>
@@ -268,7 +308,11 @@ const Dashboard = () => {
         <DataTable
           columns={columns}
           data={
-            searchedComments.length === 0 ? slicedComments : searchedComments
+            sortedComments.length === 0 && searchedComments.length === 0
+              ? slicedComments
+              : searchedComments.length !== 0 && sortedComments.length === 0
+              ? searchedComments
+              : sortedComments
           }
         />
       </div>
