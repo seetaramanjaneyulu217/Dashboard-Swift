@@ -318,7 +318,7 @@ const Dashboard = () => {
       </div>
 
       {/* for pagination */}
-      <div className="flex flex-col items-start justify-start lg:justify-end lg:flex-row lg:items-center gap-x-5 w-4/5 mx-auto mt-3">
+      <div className={`flex flex-col items-start justify-start lg:justify-end ${itemsPerPage === 10 ? 'lg:flex-col mt-3' : 'lg:flex-row'} lg:items-center gap-x-5 w-4/5 mx-auto mt-3`}>
         <div className="text-[#4a5b77]">
           {itemsPerPage * (currentPage - 1) +
             1 +
@@ -327,7 +327,7 @@ const Dashboard = () => {
           of {comments.length} items
         </div>
 
-        <div className="flex items-center gap-x-3">
+        <div className="flex  items-center gap-x-3">
           <MdOutlineKeyboardArrowLeft
             onClick={() =>
               currentPage !== 1 && setCurrentPage((prev) => prev - 1)
